@@ -1,11 +1,10 @@
 // Keeps track of one player's progress through the game, on the server.
 // Written with some help from AI.
 
-import { randomUUID } from "crypto";
 import { positions, cratesPerLevel } from "@/lib/game/positions";
 
 export type Run = {
-  id: string;
+    username: string;
   position: number; // index in the positions list
   level: number; // starts at 1
   cratesDone: number; // crates finished in this level
@@ -21,9 +20,9 @@ export type Event = "continue" | "next-level" | "promoted" | "choose" | "fired" 
 const store = globalThis as unknown as { runs?: Map<string, Run> };
 const runs = (store.runs ??= new Map<string, Run>());
 
-export function startRun(): Run {
+export function startRun(username: string): Run {
   const run: Run = {
-    id: randomUUID(),
+    username,
     position: 0,
     level: 1,
     cratesDone: 0,
@@ -33,13 +32,17 @@ export function startRun(): Run {
     currentCrate: null,
     status: "playing",
   };
-  runs.set(run.id, run);
+  runs.set(username, run); // a player has one run at a time
   return run;
 }
 
-export function getRun(id: string | undefined): Run | undefined {
-  if (!id) return undefined;
-  return runs.get(id);
+export function getRun(username: string | undefined): Run | undefined {
+  if (!username) return undefined;
+  return runs.get(username);
+}
+// points for a correct decision: 100 plus a bonus for the time left
+export function pointsFor(secondsLeft: number): number {
+  return 100 + secondsLeft;
 }
 
 function promote(run: Run): Event {
@@ -61,7 +64,7 @@ export function applyResult(run: Run, correct: boolean, secondsLeft: number): Ev
   run.currentCrate = null;
 
   if (correct) {
-    const earned = 100 + secondsLeft;
+        const earned = pointsFor(secondsLeft);
     run.points += earned;
     run.levelPoints += earned;
   } else {

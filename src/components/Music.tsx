@@ -6,6 +6,7 @@
 // so the music starts on the first click or key press.
 
 import { useEffect, useRef, useState } from "react";
+import { setSoundMuted } from "@/lib/audio/sounds";
 
 export default function Music() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -36,6 +37,7 @@ export default function Music() {
   // apply the mute button
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = muted;
+    setSoundMuted(muted);
   }, [muted]);
 
   return (

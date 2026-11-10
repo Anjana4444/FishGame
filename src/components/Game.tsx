@@ -7,6 +7,9 @@
 
 import { useEffect, useState } from "react";
 import Music from "@/components/Music";
+import { emit, type GameEvent } from "@/lib/events";
+import { setupSounds } from "@/lib/audio/sounds";
+import AuthForm, { type User } from "@/components/AuthForm";
 
 type RunInfo = {
   position: string;
@@ -42,6 +45,14 @@ const eventText: Record<string, string> = {
   fired: "Too many mistakes. You are fired!",
   won: "You reached the top. Well done, Chief!",
 };
+// which big moment makes which sound
+const bigEvents: Record<string, GameEvent> = {
+  "next-level": "nextLevel",
+  promoted: "promoted",
+  choose: "choose",
+  fired: "fired",
+  won: "won",
+};
 
 export default function Game() {
   const [run, setRun] = useState<RunInfo | null>(null);
@@ -52,13 +63,23 @@ export default function Game() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [stamp, setStamp] = useState<"approved" | "rejected" | "late">("late");
+    const [user, setUser] = useState<User | null | undefined>(undefined); // undefined = still checking
 
-  // when the page opens, check if a game is already running
+    // when the page opens, find out who is logged in
+   useEffect(() => {
+    fetch("/api/auth")
+      .then((res) => res.json())
+      .then((data) => setUser(data.user ?? null))
+      .catch(() => setUser(null));
+  }, []);
+
+  // once we know the player, load their game (if they have one)
   useEffect(() => {
+    if (!user) return;
     fetch("/api/run")
       .then((res) => res.json())
-      .then((data) => setRun(data.run));
-  }, []);
+      .then((data) => setRun(data.run ?? null));
+  }, [user]);
 
   // countdown for the current crate
   useEffect(() => {
@@ -89,6 +110,15 @@ export default function Game() {
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crate, result, busy]);
+
+    // connect the sound effects to the game events
+  useEffect(() => setupSounds(), []);
+
+  // tick during the last 10 seconds
+  useEffect(() => {
+    if (crate && !result && timeLeft > 0 && timeLeft <= 10) emit("lowTime");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
 
   async function loadCrate() {
     setBusy(true);
@@ -140,6 +170,19 @@ export default function Game() {
     await loadCrate();
   }
 
+    async function logout() {
+    await fetch("/api/auth", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ action: "logout" }),
+    });
+    setUser(null);
+    setRun(null);
+    setCrate(null);
+    setResult(null);
+    setMessage("");
+  }
+
   async function decide(approve: boolean | null) {
     if (!crate || busy) return;
     setBusy(true);
@@ -156,6 +199,11 @@ export default function Game() {
         setStamp(approve === true ? "approved" : approve === false ? "rejected" : "late");
         setResult({ ...data, noAnswer: approve === null });
         setRun(data.run);
+        if (approve !== null) emit("stamp");
+        const outcome: GameEvent = data.correct ? "correct" : approve === null ? "timeUp" : "wrong";
+        const big = bigEvents[data.event];
+        // a wrong answer should not play the level-up jingle
+        emit(big && (data.correct || big !== "nextLevel") ? big : outcome);
       }
     } catch {
       setMessage("Could not reach the server.");
@@ -182,6 +230,22 @@ export default function Game() {
   const quietButton =
     "font-display text-xl tracking-wide rounded-sm border-2 border-paper/60 px-6 py-2 hover:bg-paper/10 disabled:opacity-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper";
 
+      if (user === undefined) {
+    return <main className="min-h-screen bg-harbour p-6 text-paper">Checking your login…</main>;
+  }
+
+  if (user === null) {
+    return (
+      <main className="min-h-screen bg-harbour px-4 py-6 text-paper">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="mb-6 border-b-2 border-stencil pb-3 font-display text-4xl font-extrabold tracking-wide text-stencil">
+            Harbour Inspector
+          </h1>
+          <AuthForm onDone={setUser} />
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="min-h-screen bg-harbour px-4 py-6 text-paper">
       <div className="mx-auto max-w-4xl">
@@ -218,6 +282,17 @@ export default function Game() {
             </div>
           )}
                     <Music />
+                              <div className="flex items-center gap-3 text-sm">
+            <span>
+              {user.username} ({user.role})
+            </span>
+            <button
+              onClick={logout}
+              className="rounded-sm border-2 border-paper/60 px-3 py-1 font-display text-lg tracking-wide hover:bg-paper/10 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper"
+            >
+              Log out
+            </button>
+          </div>
         </header>
 
         {run && (

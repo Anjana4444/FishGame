@@ -1,26 +1,29 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth/session";
 import { startRun, getRun, choose, publicRun } from "@/lib/game/run";
 
 // GET /api/run: where is the player right now?
 export async function GET() {
-  const run = getRun((await cookies()).get("run")?.value);
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Log in first" }, { status: 401 });
+
+  const run = getRun(user.username);
   return NextResponse.json({ run: run ? publicRun(run) : null });
 }
 
 // POST /api/run with { action: "start" | "replay" | "restart" }
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Log in first" }, { status: 401 });
+
   const body = await request.json().catch(() => ({}));
 
   if (body.action === "start") {
-    const run = startRun();
-    const response = NextResponse.json({ run: publicRun(run) });
-    response.cookies.set("run", run.id, { httpOnly: true, sameSite: "lax", path: "/" });
-    return response;
+    return NextResponse.json({ run: publicRun(startRun(user.username)) });
   }
 
   if (body.action === "replay" || body.action === "restart") {
-    const run = getRun((await cookies()).get("run")?.value);
+    const run = getRun(user.username);
     if (!run || !choose(run, body.action)) {
       return NextResponse.json({ error: "Nothing to choose right now" }, { status: 400 });
     }
