@@ -16,14 +16,14 @@ export const positions: Position[] = [
     tanksPerLevel: [1, 1, 2, 2], // 4 levels
     cheatChance: 0.3,
     secondsPerTank: 20,
-    pointsToPromote: 900,
+    pointsToPromote: 1250,
   },
   {
     name: "Inspector",
     tanksPerLevel: [2, 2, 3, 3],
     cheatChance: 0.4,
     secondsPerTank: 18,
-    pointsToPromote: 1500,
+    pointsToPromote: 1350,
   },
   {
     name: "Chief",

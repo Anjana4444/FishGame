@@ -52,3 +52,24 @@ export async function createCrate(positionIndex: number, level: number): Promise
   // the real total is not sent to the browser
   return { id, images: tanks.map((t) => t.image), claim, seconds };
 }
+
+// Checks the player's decision: true = approve, false = reject, null = no answer.
+export function judgeCrate(id: string, approve: boolean | null) {
+  const secret = secrets.get(id);
+  if (!secret) return null;
+  secrets.delete(id); // a crate can only be judged once
+
+  const msLeft = secret.deadline - Date.now();
+  const onTime = msLeft > -1000; // 1 second of slack for slow connections
+  const honest = secret.claim === secret.total;
+  const correct = onTime && approve !== null && approve === honest;
+
+  return {
+    correct,
+    onTime,
+    honest,
+    claim: secret.claim,
+    total: secret.total,
+    secondsLeft: Math.max(0, Math.floor(msLeft / 1000)),
+  };
+}
