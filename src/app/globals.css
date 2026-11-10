@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-harbour: #0f2b35;
+  --color-deep: #0a1f27;
+  --color-water: #1e5a66;
+  --color-paper: #e6ede9;
+  --color-ink: #16262c;
+  --color-stencil: #d2a62c;
+  --color-approve: #2e7d57;
+  --color-reject: #a63d40;
+    --font-display: var(--font-barlow);
+  --font-body: var(--font-sourcesans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-harbour);
+  color: var(--color-paper);
+  font-family: var(--font-body), sans-serif;
+}
+
+/* the stamp lands on the paperwork */
+@keyframes stamp-in {
+  0% { transform: scale(1.8) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(0.94) rotate(-6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+}
+
+.stamp-in {
+  animation: stamp-in 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp-in {
+    animation: none;
+  }
 }

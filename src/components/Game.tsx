@@ -1,9 +1,12 @@
 "use client";
 
+
+
 // Main game screen: shows the crate, the timer and the decision buttons.
 // Written with some help from AI.
 
 import { useEffect, useState } from "react";
+import Music from "@/components/Music";
 
 type RunInfo = {
   position: string;
@@ -48,6 +51,7 @@ export default function Game() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [stamp, setStamp] = useState<"approved" | "rejected" | "late">("late");
 
   // when the page opens, check if a game is already running
   useEffect(() => {
@@ -73,6 +77,18 @@ export default function Game() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
+
+    // keyboard shortcuts: A to approve, R to reject
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!crate || result || busy) return;
+      if (e.key === "a" || e.key === "A") decide(true);
+      if (e.key === "r" || e.key === "R") decide(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crate, result, busy]);
 
   async function loadCrate() {
     setBusy(true);
@@ -137,6 +153,7 @@ export default function Game() {
       if (!res.ok) {
         setMessage(data.error);
       } else {
+        setStamp(approve === true ? "approved" : approve === false ? "rejected" : "late");
         setResult({ ...data, noAnswer: approve === null });
         setRun(data.run);
       }
@@ -146,137 +163,194 @@ export default function Game() {
     setBusy(false);
   }
 
-  const showCrate = crate && !result;
-  const buttonStyle = "rounded px-5 py-2 font-semibold disabled:opacity-50";
+    const share = crate ? Math.min(timeLeft / crate.seconds, 1) : 0;
+  const lowTime = timeLeft <= 10;
+  const promoShare =
+    run && run.pointsToPromote > 0 ? Math.min(run.points / run.pointsToPromote, 1) : 0;
+
+  // what to say under the desk when something big happened
+  const note = result
+    ? eventText[result.event]
+    : run && run.status !== "playing"
+      ? eventText[run.status]
+      : undefined;
+
+  const stampButton =
+    "font-display text-2xl tracking-wide border-4 rounded-sm px-6 py-2 -rotate-2 transition-transform active:scale-95 disabled:opacity-40 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-water";
+  const mainButton =
+    "font-display text-xl tracking-wide rounded-sm bg-stencil px-6 py-2 text-ink hover:brightness-110 disabled:opacity-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper";
+  const quietButton =
+    "font-display text-xl tracking-wide rounded-sm border-2 border-paper/60 px-6 py-2 hover:bg-paper/10 disabled:opacity-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper";
 
   return (
-    <main className="min-h-screen bg-slate-900 p-6 text-white">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="mb-4 text-3xl font-bold">Harbour Inspector</h1>
+    <main className="min-h-screen bg-harbour px-4 py-6 text-paper">
+      <div className="mx-auto max-w-4xl">
+        <header className="mb-4 flex flex-wrap items-end justify-between gap-4 border-b-2 border-stencil pb-3">
+          <h1 className="font-display text-4xl font-extrabold tracking-wide text-stencil">
+            Harbour Inspector
+          </h1>
+
+          {run && (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <p className="font-display text-xl">
+                {run.position}, level {run.level} of {run.levelCount}
+              </p>
+              <div
+                className="flex items-center gap-1"
+                role="img"
+                aria-label={`Crate ${Math.min(run.cratesDone + 1, run.cratesPerLevel)} of ${run.cratesPerLevel}`}
+              >
+                {Array.from({ length: run.cratesPerLevel }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`h-4 w-4 border-2 border-stencil ${i < run.cratesDone ? "bg-stencil" : ""}`}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-1" role="img" aria-label={`${run.lives} lives left`}>
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className={`h-5 w-5 rounded-full border-4 ${i < run.lives ? "border-paper" : "border-paper/20"}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+                    <Music />
+        </header>
 
         {run && (
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 rounded bg-slate-800 p-3 text-sm">
-            <span>Position: {run.position}</span>
-            <span>
-              Level: {run.level}/{run.levelCount}
-            </span>
-            <span>
-              Crate: {Math.min(run.cratesDone + 1, run.cratesPerLevel)}/{run.cratesPerLevel}
-            </span>
-            <span>
-              Points: {run.points}
-              {run.pointsToPromote > 0 && ` / ${run.pointsToPromote}`}
-            </span>
-            <span>Lives: {run.lives}</span>
+          <div className="mb-5">
+            <p className="mb-1 text-sm">
+              {run.points} points
+              {run.pointsToPromote > 0 && `, ${run.pointsToPromote} needed to be promoted`}
+            </p>
+            {run.pointsToPromote > 0 && (
+              <div className="h-2 overflow-hidden rounded-full bg-paper/15">
+                <div className="h-full bg-stencil" style={{ width: `${promoShare * 100}%` }} />
+              </div>
+            )}
           </div>
         )}
 
-        {message && <p className="mb-4 text-red-400">{message}</p>}
+        {message && (
+          <p role="alert" className="mb-4 font-bold text-[#f2a9a6]">
+            {message}
+          </p>
+        )}
 
-        {showCrate && (
-          <div className="rounded bg-slate-800 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-lg">
-                Paperwork says: <strong>{crate.claim} fish</strong> in total
-              </p>
-              <p className={timeLeft <= 10 ? "text-2xl font-bold text-red-400" : "text-2xl font-bold"}>
-                {timeLeft}s
-              </p>
-            </div>
-
-            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        {crate && (
+          <div className="grid gap-5 md:grid-cols-[3fr_2fr]">
+            <section
+              aria-label="Fish tanks"
+              className={crate.images.length === 1 ? "grid" : "grid grid-cols-2 gap-3"}
+            >
               {crate.images.map((image, i) => (
-                <div key={i}>
-                  <p className="mb-1 text-sm text-slate-400">Tank {i + 1}</p>
+                <figure key={i} className="rounded-md border-4 border-water bg-deep p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt={`Fish tank ${i + 1}`} className="w-full rounded" />
-                </div>
+                  <img src={image} alt={`Fish tank ${i + 1}`} className="w-full rounded-sm" />
+                  <figcaption className="px-1 pt-1 text-sm text-paper/70">Tank {i + 1}</figcaption>
+                </figure>
               ))}
-            </div>
+            </section>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => decide(true)}
-                disabled={busy}
-                className={`${buttonStyle} bg-green-600 hover:bg-green-500`}
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => decide(false)}
-                disabled={busy}
-                className={`${buttonStyle} bg-red-600 hover:bg-red-500`}
-              >
-                Reject
-              </button>
-            </div>
+            <section aria-label="Paperwork" className="self-start rounded-sm bg-paper p-5 text-ink shadow-lg">
+              <div className="mb-4 h-2 overflow-hidden rounded-full bg-ink/15">
+                <div
+                  className={`h-full ${lowTime && !result ? "bg-reject" : "bg-water"}`}
+                  style={{ width: `${share * 100}%`, transition: "width 250ms linear" }}
+                />
+              </div>
+
+              <p className="text-ink/70">The paperwork says</p>
+              <p className="font-display text-8xl font-extrabold leading-none">{crate.claim}</p>
+              <p className="mb-4">
+                fish in total, across {crate.images.length} {crate.images.length === 1 ? "tank" : "tanks"}
+              </p>
+
+              {result ? (
+                <div>
+                  <p
+                    className={`stamp-in inline-block rounded-sm border-4 px-4 py-1 font-display text-3xl ${
+                      stamp === "approved"
+                        ? "border-approve text-approve"
+                        : stamp === "rejected"
+                          ? "border-reject text-reject"
+                          : "border-ink/60 text-ink/60"
+                    }`}
+                  >
+                    {stamp === "approved" ? "APPROVED" : stamp === "rejected" ? "REJECTED" : "TIME UP"}
+                  </p>
+                  <p className="mt-3 font-bold">
+                    {result.correct ? "Good call." : result.noAnswer ? "You ran out of time." : "Wrong call."}
+                  </p>
+                  <p>
+                    The tanks held {result.total} fish, so this crate was{" "}
+                    {result.wasHonest ? "honest" : "cheating"}.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className={`mb-3 font-bold ${lowTime ? "text-reject" : ""}`}>{timeLeft} seconds left</p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => decide(true)}
+                      disabled={busy}
+                      className={`${stampButton} border-approve text-approve hover:bg-approve hover:text-paper`}
+                    >
+                      Approve (A)
+                    </button>
+                    <button
+                      onClick={() => decide(false)}
+                      disabled={busy}
+                      className={`${stampButton} border-reject text-reject hover:bg-reject hover:text-paper`}
+                    >
+                      Reject (R)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
         )}
 
-        {!showCrate && (
-          <div className="rounded bg-slate-800 p-4">
-            {result && (
-              <div className="mb-4">
-                <p className="text-xl font-bold">
-                  {result.correct
-                    ? "Correct!"
-                    : result.noAnswer
-                      ? "Time ran out!"
-                      : "Wrong decision."}
+        {(!crate || result) && (
+          <div className="mt-6">
+            {note && <p className="mb-3 border-l-4 border-stencil pl-3 text-lg">{note}</p>}
+
+            {!run && (
+              <div className="max-w-xl">
+                <p className="mb-4 text-lg">
+                  Each crate comes with paperwork that says how many fish are inside. Count the fish in
+                  every tank and add them up. Approve the paperwork if it matches, reject it if it
+                  doesn&apos;t. Three mistakes and you&apos;re fired.
                 </p>
-                <p>
-                  The paperwork said {result.claim}, the real total was {result.total}. That crate was{" "}
-                  {result.wasHonest ? "honest." : "cheating."}
-                </p>
-                {eventText[result.event] && <p className="mt-2 text-yellow-300">{eventText[result.event]}</p>}
+                <button onClick={() => sendAction("start")} disabled={busy} className={mainButton}>
+                  Start my first shift
+                </button>
               </div>
             )}
 
-            {!run && (
-              <button
-                onClick={() => sendAction("start")}
-                disabled={busy}
-                className={`${buttonStyle} bg-blue-600 hover:bg-blue-500`}
-              >
-                Start my first shift
-              </button>
-            )}
-
             {run?.status === "playing" && (
-              <button
-                onClick={loadCrate}
-                disabled={busy}
-                className={`${buttonStyle} bg-blue-600 hover:bg-blue-500`}
-              >
+              <button onClick={loadCrate} disabled={busy} className={mainButton}>
                 {result ? "Next crate" : "Continue"}
               </button>
             )}
 
             {run?.status === "choose" && (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => sendAction("replay")}
-                  disabled={busy}
-                  className={`${buttonStyle} bg-blue-600 hover:bg-blue-500`}
-                >
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => sendAction("replay")} disabled={busy} className={mainButton}>
                   Replay this level
                 </button>
-                <button
-                  onClick={() => sendAction("restart")}
-                  disabled={busy}
-                  className={`${buttonStyle} bg-slate-600 hover:bg-slate-500`}
-                >
+                <button onClick={() => sendAction("restart")} disabled={busy} className={quietButton}>
                   Start over
                 </button>
               </div>
             )}
 
             {(run?.status === "fired" || run?.status === "won") && (
-              <button
-                onClick={() => sendAction("start")}
-                disabled={busy}
-                className={`${buttonStyle} bg-blue-600 hover:bg-blue-500`}
-              >
+              <button onClick={() => sendAction("start")} disabled={busy} className={mainButton}>
                 Play again
               </button>
             )}
