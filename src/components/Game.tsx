@@ -10,6 +10,7 @@ import Music from "@/components/Music";
 import { emit, type GameEvent } from "@/lib/events";
 import { setupSounds } from "@/lib/audio/sounds";
 import AuthForm, { type User } from "@/components/AuthForm";
+import DecoyItem from "@/components/DecoyItem";
 
 type RunInfo = {
   position: string;
@@ -23,12 +24,18 @@ type RunInfo = {
   status: "playing" | "choose" | "fired" | "won";
 };
 
-type Crate = { id: string; images: string[]; claim: number; seconds: number };
+type Crate = {
+  id: string;
+  tanks: { image: string; items: string[] }[];
+  claim: number;
+  seconds: number;
+};
 
 type Result = {
   correct: boolean;
   onTime: boolean;
   wasHonest: boolean;
+  kind: string;
   claim: number;
   total: number;
   event: string;
@@ -44,6 +51,12 @@ const eventText: Record<string, string> = {
   choose: "Not enough points for a promotion. Replay this level or start over?",
   fired: "Too many mistakes. You are fired!",
   won: "You reached the top. Well done, Chief!",
+};
+// why the crate was right or wrong, shown after each decision
+const explanations: Record<string, string> = {
+  honest: "The paperwork was correct. Paper fish never count.",
+  miscount: "The paperwork had the wrong number.",
+  paper: "Paper fish were counted as real fish, so the paperwork was too high.",
 };
 // which big moment makes which sound
 const bigEvents: Record<string, GameEvent> = {
@@ -316,15 +329,24 @@ export default function Game() {
         )}
 
         {crate && (
-          <div className="grid gap-5 md:grid-cols-[3fr_2fr]">
-            <section
+          <div className="grid gap-5 md:grid-cols-[3fr_2fr]  md:items-start">
+                        <section
               aria-label="Fish tanks"
-              className={crate.images.length === 1 ? "grid" : "grid grid-cols-2 gap-3"}
+              className={crate.tanks.length === 1 ? "grid" : "grid grid-cols-2 items-start gap-3"}
             >
-              {crate.images.map((image, i) => (
+              {crate.tanks.map((tank, i) => (
                 <figure key={i} className="rounded-md border-4 border-water bg-deep p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt={`Fish tank ${i + 1}`} className="w-full rounded-sm" />
+                  <img src={tank.image} alt={`Fish tank ${i + 1}`} className="w-full rounded-sm" />
+                  {tank.items.length > 0 && (
+                    <div className="flex items-end gap-3 px-2 pt-2">
+                      {tank.items.map((item, j) => (
+                        <div key={j} className={`drop-shadow-md ${j % 2 === 0 ? "-rotate-3" : "rotate-3"}`}>
+                          <DecoyItem kind={item} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <figcaption className="px-1 pt-1 text-sm text-paper/70">Tank {i + 1}</figcaption>
                 </figure>
               ))}
@@ -340,9 +362,11 @@ export default function Game() {
 
               <p className="text-ink/70">The paperwork says</p>
               <p className="font-display text-8xl font-extrabold leading-none">{crate.claim}</p>
-              <p className="mb-4">
-                fish in total, across {crate.images.length} {crate.images.length === 1 ? "tank" : "tanks"}
+                            <p className="mb-4">
+                fish in total, across {crate.tanks.length} {crate.tanks.length === 1 ? "tank" : "tanks"}
               </p>
+                                            <p className="mb-4 text-sm text-ink/70">Only real fish count. Paper ones don&apos;t.</p>
+
 
               {result ? (
                 <div>
@@ -360,9 +384,8 @@ export default function Game() {
                   <p className="mt-3 font-bold">
                     {result.correct ? "Good call." : result.noAnswer ? "You ran out of time." : "Wrong call."}
                   </p>
-                  <p>
-                    The tanks held {result.total} fish, so this crate was{" "}
-                    {result.wasHonest ? "honest" : "cheating"}.
+                                    <p>
+                    The tanks held {result.total} real fish. {explanations[result.kind]}
                   </p>
                 </div>
               ) : (

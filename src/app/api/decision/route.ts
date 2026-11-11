@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     correct: verdict.correct,
     onTime: verdict.onTime,
     wasHonest: verdict.honest,
+    kind: verdict.kind,
     claim: verdict.claim,
     total: verdict.total,
     event,
