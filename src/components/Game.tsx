@@ -11,6 +11,7 @@ import { emit, type GameEvent } from "@/lib/events";
 import { setupSounds } from "@/lib/audio/sounds";
 import AuthForm, { type User } from "@/components/AuthForm";
 import DecoyItem from "@/components/DecoyItem";
+import Leaderboard from "@/components/Leaderboard";
 
 type RunInfo = {
   position: string;
@@ -77,6 +78,7 @@ export default function Game() {
   const [busy, setBusy] = useState(false);
   const [stamp, setStamp] = useState<"approved" | "rejected" | "late">("late");
     const [user, setUser] = useState<User | null | undefined>(undefined); // undefined = still checking
+      const [showBoard, setShowBoard] = useState(false);
 
     // when the page opens, find out who is logged in
    useEffect(() => {
@@ -194,6 +196,7 @@ export default function Game() {
     setCrate(null);
     setResult(null);
     setMessage("");
+        setShowBoard(false);
   }
 
   async function decide(approve: boolean | null) {
@@ -295,7 +298,14 @@ export default function Game() {
             </div>
           )}
                     <Music />
-                              <div className="flex items-center gap-3 text-sm">
+                              <button
+            onClick={() => setShowBoard(!showBoard)}
+            aria-expanded={showBoard}
+            className="rounded-sm border-2 border-paper/60 px-3 py-1 font-display text-lg tracking-wide hover:bg-paper/10 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper"
+          >
+            Leaderboard
+          </button>
+          <div className="flex items-center gap-3 text-sm">
             <span>
               {user.username} ({user.role})
             </span>
@@ -319,6 +329,12 @@ export default function Game() {
                 <div className="h-full bg-stencil" style={{ width: `${promoShare * 100}%` }} />
               </div>
             )}
+          </div>
+        )}
+
+                {showBoard && (
+          <div className="mb-5">
+            <Leaderboard />
           </div>
         )}
 

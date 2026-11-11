@@ -79,3 +79,10 @@ export function recordProgress(username: string, earned: number, position: numbe
   if (position > user.highestPosition) user.highestPosition = position;
   save();
 }
+
+// best players first: highest position, then most points
+export function topPlayers(limit: number): User[] {
+  return [...load()]
+    .sort((a, b) => b.highestPosition - a.highestPosition || b.totalPoints - a.totalPoints)
+    .slice(0, limit);
+}
