@@ -1,6 +1,5 @@
 "use client";
 
-// The main menu. Written with some help from AI.
 
 import type { RunInfo } from "@/components/types";
 import Water, { Fish } from "@/components/Water";
@@ -16,7 +15,6 @@ type Props = {
 };
 
 export default function Menu({ username, run, onPlay, onNew, onBoard, onHelp, onLogout }: Props) {
-  // is there a game the player can carry on with?
   const active = run !== null && (run.status === "playing" || run.status === "choose");
 
   const big =

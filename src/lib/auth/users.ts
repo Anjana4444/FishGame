@@ -1,5 +1,4 @@
-// All the user accounts, saved in data/users.json.
-// Written with some help from AI.
+
 
 import fs from "fs";
 import path from "path";
@@ -9,13 +8,12 @@ export type User = {
   username: string;
   role: "player" | "admin";
   passwordHash: string;
-  totalPoints: number; // points earned over all games
-  highestPosition: number; // index in the positions list
+  totalPoints: number; 
+  highestPosition: number; 
 };
 
 const file = path.join(process.cwd(), "data", "users.json");
 
-// kept in memory after the first read
 const store = globalThis as unknown as { users?: User[] };
 
 function load(): User[] {
@@ -25,7 +23,7 @@ function load(): User[] {
   try {
     users = JSON.parse(fs.readFileSync(file, "utf8"));
   } catch {
-    users = []; // no file yet
+    users = []; 
   }
   store.users = users;
   return users;
@@ -40,7 +38,6 @@ export function findUser(username: string): User | undefined {
   return load().find((u) => u.username.toLowerCase() === username.toLowerCase());
 }
 
-// returns an error message, or null if the account was created
 export function createUser(username: string, password: string): string | null {
   if (!/^[A-Za-z0-9_]{3,15}$/.test(username)) {
     return "Username must be 3 to 15 letters, numbers or underscores.";
@@ -55,7 +52,7 @@ export function createUser(username: string, password: string): string | null {
   const users = load();
   users.push({
     username,
-    role: users.length === 0 ? "admin" : "player", // the first account is the admin
+    role: users.length === 0 ? "admin" : "player", 
     passwordHash: hashPassword(password),
     totalPoints: 0,
     highestPosition: 0,
@@ -70,7 +67,6 @@ export function verifyLogin(username: string, password: string): User | null {
   return user;
 }
 
-// called after every crate to keep the player's stats up to date
 export function recordProgress(username: string, earned: number, position: number) {
   const user = findUser(username);
   if (!user) return;
@@ -80,7 +76,6 @@ export function recordProgress(username: string, earned: number, position: numbe
   save();
 }
 
-// best players first: highest position, then most points
 export function topPlayers(limit: number): User[] {
   return [...load()]
     .sort((a, b) => b.highestPosition - a.highestPosition || b.totalPoints - a.totalPoints)

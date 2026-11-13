@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { startRun, getRun, choose, publicRun } from "@/lib/game/run";
 
-// GET /api/run: where is the player right now?
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Log in first" }, { status: 401 });
@@ -11,7 +10,6 @@ export async function GET() {
   return NextResponse.json({ run: run ? publicRun(run) : null });
 }
 
-// POST /api/run with { action: "start" | "replay" | "restart" }
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Log in first" }, { status: 401 });

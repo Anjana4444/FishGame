@@ -1,6 +1,5 @@
 "use client";
 
-// The rules, in plain words. Written with some help from AI.
 
 export default function HowToPlay({ onBack }: { onBack: () => void }) {
   return (

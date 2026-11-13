@@ -1,5 +1,4 @@
-// Sound effects made with the Web Audio API (no sound files needed).
-// Written with some help from AI.
+
 
 import { on, type GameEvent } from "@/lib/events";
 
@@ -10,8 +9,7 @@ export function setSoundMuted(value: boolean) {
   muted = value;
 }
 
-// browsers only allow sound after the player has clicked something,
-// so the context is created the first time a sound is needed
+
 function getContext(): AudioContext | null {
   if (muted) return null;
   if (!context) context = new AudioContext();
@@ -19,7 +17,6 @@ function getContext(): AudioContext | null {
   return context;
 }
 
-// one short note
 function tone(freq: number, start: number, length: number, type: OscillatorType = "sine", volume = 0.2) {
   const c = getContext();
   if (!c) return;
@@ -39,7 +36,6 @@ function tone(freq: number, start: number, length: number, type: OscillatorType 
   osc.stop(t + length);
 }
 
-// the rubber stamp: a low note that drops quickly
 function thump() {
   const c = getContext();
   if (!c) return;
@@ -64,7 +60,6 @@ function fanfare() {
   [523, 659, 784, 1047].forEach((freq, i) => tone(freq, i * 0.15, i === 3 ? 0.5 : 0.15, "triangle", 0.25));
 }
 
-// which sound belongs to which event
 const sounds: Record<GameEvent, () => void> = {
   stamp: thump,
   correct: () => {
@@ -90,7 +85,6 @@ const sounds: Record<GameEvent, () => void> = {
   },
 };
 
-// connect every sound to its event, returns a function that disconnects them
 export function setupSounds(): () => void {
   const stops = (Object.keys(sounds) as GameEvent[]).map((event) => on(event, sounds[event]));
   return () => stops.forEach((stop) => stop());

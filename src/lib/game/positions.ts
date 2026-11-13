@@ -1,15 +1,14 @@
-// Positions the player can reach. Change the numbers here to balance the game.
 
 export type Cheat = "miscount" | "paper";
 
 export type Position = {
   name: string;
-  tanksPerLevel: number[]; // tanks in each crate, one entry per level
-  cheatChance: number; // chance a crate is not honest
-  cheats: Cheat[]; // the kinds of cheating this position can see
-  decoyChance: number; // chance an honest crate still has a harmless paper fish on it
+  tanksPerLevel: number[]; 
+  cheatChance: number; 
+  cheats: Cheat[]; 
+  decoyChance: number; 
   secondsPerTank: number;
-  pointsToPromote: number; // points needed to move up from this position
+  pointsToPromote: number; 
 };
 
 export const cratesPerLevel = 3;
@@ -17,7 +16,7 @@ export const cratesPerLevel = 3;
 export const positions: Position[] = [
   {
     name: "Trainee",
-    tanksPerLevel: [1, 1, 2, 2], // 4 levels
+    tanksPerLevel: [1, 1, 2, 2], 
     cheatChance: 0.3,
     cheats: ["miscount", "paper"],
     decoyChance: 0.2,
@@ -40,6 +39,6 @@ export const positions: Position[] = [
     cheats: ["miscount", "paper"],
     decoyChance: 0.4,
     secondsPerTank: 15,
-    pointsToPromote: 0, // last position, nothing above it
+    pointsToPromote: 0, 
   },
 ];

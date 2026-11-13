@@ -1,9 +1,7 @@
-// Decorative water for the menu: three layers of waves and a few fish swimming past.
-// Everything is drawn as SVG, so no image files are needed. Written with some help from AI.
+
 
 import type { CSSProperties } from "react";
 
-// one wave shape that repeats twice, so the loop has no visible seam
 const wave =
   "M0 60 C100 20 200 20 300 60 S500 100 600 60 C700 20 800 20 900 60 S1100 100 1200 60 V120 H0 Z";
 
@@ -17,7 +15,6 @@ export function Fish({ className }: { className?: string }) {
   );
 }
 
-// the odd one out: a paper fish, like the decoys in the game
 function PaperFish({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 20" className={className} aria-hidden="true">
@@ -34,7 +31,6 @@ function PaperFish({ className }: { className?: string }) {
   );
 }
 
-// each fish swims across at its own speed and depth
 function Swimmer({
   depth,
   seconds,
@@ -43,7 +39,7 @@ function Swimmer({
 }: {
   depth: string;
   seconds: number;
-  head: number; // starts this many seconds into its swim, so the screen is never empty
+  head: number;
   children: React.ReactNode;
 }) {
   const style: CSSProperties = { animationDuration: `${seconds}s`, animationDelay: `-${head}s` };

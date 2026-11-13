@@ -1,6 +1,4 @@
-// Keeps track of one player's progress through the game, on the server.
-// Runs are saved in data/runs.json, so a server restart does not lose them.
-// Written with some help from AI.
+
 
 import fs from "fs";
 import path from "path";
@@ -8,11 +6,11 @@ import { positions, cratesPerLevel } from "@/lib/game/positions";
 
 export type Run = {
   username: string;
-  position: number; // index in the positions list
-  level: number; // starts at 1
-  cratesDone: number; // crates finished in this level
-  points: number; // points in this position
-  levelPoints: number; // points earned in the current level only
+  position: number; 
+  level: number; 
+  cratesDone: number; 
+  points: number; 
+  levelPoints: number; 
   lives: number;
   currentCrate: string | null;
   status: "playing" | "choose" | "fired" | "won";
@@ -22,7 +20,6 @@ export type Event = "continue" | "next-level" | "promoted" | "choose" | "fired" 
 
 const file = path.join(process.cwd(), "data", "runs.json");
 
-// kept in memory after the first read
 const store = globalThis as unknown as { runs?: Map<string, Run> };
 
 function load(): Map<string, Run> {
@@ -32,11 +29,11 @@ function load(): Map<string, Run> {
   try {
     const saved: Run[] = JSON.parse(fs.readFileSync(file, "utf8"));
     for (const run of saved) {
-      run.currentCrate = null; // crates are not saved, so an old one can no longer be answered
+      run.currentCrate = null; 
       runs.set(run.username, run);
     }
   } catch {
-    // no file yet
+    
   }
   store.runs = runs;
   return runs;
@@ -59,7 +56,7 @@ export function startRun(username: string): Run {
     currentCrate: null,
     status: "playing",
   };
-  load().set(username, run); // a player has one run at a time
+  load().set(username, run); 
   save();
   return run;
 }
@@ -106,7 +103,6 @@ function play(run: Run, correct: boolean, secondsLeft: number): Event {
   run.cratesDone++;
   if (run.cratesDone < cratesPerLevel) return "continue";
 
-  // the level is finished
   const position = positions[run.position];
   if (run.level < position.tanksPerLevel.length) {
     run.level++;
@@ -115,26 +111,23 @@ function play(run: Run, correct: boolean, secondsLeft: number): Event {
     return "next-level";
   }
 
-  // it was the last level of this position
   if (run.points >= position.pointsToPromote) return promote(run);
 
   run.status = "choose";
   return "choose";
 }
 
-// Called after every crate. Updates points, lives and level, then saves.
 export function applyResult(run: Run, correct: boolean, secondsLeft: number): Event {
   const event = play(run, correct, secondsLeft);
   save();
   return event;
 }
 
-// The player's choice when they did not get enough points to be promoted.
 export function choose(run: Run, action: "replay" | "restart"): boolean {
   if (run.status !== "choose") return false;
 
   if (action === "replay") {
-    run.points -= run.levelPoints; // do not count this level twice
+    run.points -= run.levelPoints; 
   } else {
     run.level = 1;
     run.points = 0;
@@ -148,7 +141,6 @@ export function choose(run: Run, action: "replay" | "restart"): boolean {
   return true;
 }
 
-// What the browser is allowed to see about the run.
 export function publicRun(run: Run) {
   const position = positions[run.position];
   return {

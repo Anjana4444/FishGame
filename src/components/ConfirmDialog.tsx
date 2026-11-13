@@ -1,13 +1,12 @@
 "use client";
 
-// In-game confirmation box, built on the native <dialog> element.
-// Written with some help from AI.
+
 
 import { useEffect, useRef } from "react";
 import type { Question } from "@/components/types";
 
 type Props = {
-  question: Question | null; // null = nothing to ask
+  question: Question | null; 
   onYes: () => void;
   onNo: () => void;
 };
@@ -16,14 +15,14 @@ export default function ConfirmDialog({ question, onYes, onNo }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const noRef = useRef<HTMLButtonElement>(null);
 
-  // open or close the box depending on whether there is a question
+  
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
     if (question && !dialog.open) {
       dialog.showModal();
-      noRef.current?.focus(); // start on the safe choice
+      noRef.current?.focus(); 
     }
     if (!question && dialog.open) {
       dialog.close();
@@ -39,7 +38,7 @@ export default function ConfirmDialog({ question, onYes, onNo }: Props) {
         e.preventDefault();
         onNo();
       }}
-      // a click on the dark area around the box
+     
       onClick={(e) => {
         if (e.target === dialogRef.current) onNo();
       }}

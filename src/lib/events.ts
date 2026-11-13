@@ -1,6 +1,4 @@
-// A tiny event system. The game says what happened, and anything that
-// cares (sounds now, maybe screen effects later) can listen.
-// Written with some help from AI.
+
 
 export type GameEvent =
   | "stamp"
@@ -18,7 +16,6 @@ type Handler = () => void;
 
 const handlers: Partial<Record<GameEvent, Handler[]>> = {};
 
-// start listening, returns a function that stops listening again
 export function on(event: GameEvent, handler: Handler): () => void {
   (handlers[event] ??= []).push(handler);
   return () => {

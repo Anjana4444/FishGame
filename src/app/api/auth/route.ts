@@ -3,7 +3,6 @@ import { createUser, verifyLogin, type User } from "@/lib/auth/users";
 import { createSession, endSession, getCurrentUser } from "@/lib/auth/session";
 import { positions } from "@/lib/game/positions";
 
-// what the browser is allowed to know about a user (never the password hash)
 function publicUser(user: User) {
   return {
     username: user.username,
@@ -13,13 +12,11 @@ function publicUser(user: User) {
   };
 }
 
-// GET /api/auth: who is logged in?
 export async function GET() {
   const user = await getCurrentUser();
   return NextResponse.json({ user: user ? publicUser(user) : null });
 }
 
-// POST /api/auth with { action: "signup" | "login" | "logout", username, password }
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const username = String(body.username ?? "").trim();
@@ -30,7 +27,6 @@ export async function POST(request: Request) {
     if (error) return NextResponse.json({ error }, { status: 400 });
   }
 
-  // a new account is logged in straight away, so signup and login share this part
   if (body.action === "signup" || body.action === "login") {
     const user = verifyLogin(username, password);
     if (!user) {

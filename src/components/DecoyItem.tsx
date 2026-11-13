@@ -1,5 +1,4 @@
-// Small drawings of the things that float on top of a tank.
-// Drawn as SVG so no image files are needed. Written with some help from AI.
+
 
 export default function DecoyItem({ kind }: { kind: string }) {
   const label = kind === "paper" ? "paper fish" : kind;

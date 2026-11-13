@@ -4,9 +4,8 @@ import { getRun, applyResult, publicRun } from "@/lib/game/run";
 import { getCurrentUser } from "@/lib/auth/session";
 import { recordProgress } from "@/lib/auth/users";
 
-// GET /api/crates: the next crate for the logged-in player's current level
 export async function GET() {
-  await connection(); // never cache, every request gets a new crate
+  await connection(); 
 
   const user = await getCurrentUser();
   if (!user) {
@@ -21,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ error: "The game is not running", run: publicRun(run) }, { status: 409 });
   }
 
-  // a crate that was never answered counts as a mistake
+
   if (run.currentCrate) {
     judgeCrate(run.currentCrate, null);
     applyResult(run, false, 0);

@@ -1,9 +1,6 @@
 "use client";
 
-// Background music with a mute button.
-// Music: <title> by <artist>, <source URL>, <licence>   <- fill this in
-// Browsers block sound until the player has interacted with the page,
-// so the music starts on the first click or key press.
+
 
 import { useEffect, useRef, useState } from "react";
 import { setSoundMuted } from "@/lib/audio/sounds";
@@ -12,7 +9,6 @@ export default function Music() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [muted, setMuted] = useState(false);
 
-  // create the audio once and start it on the first interaction
   useEffect(() => {
     const audio = new Audio("/audio/harbour.mp3");
     audio.loop = true;
@@ -20,7 +16,7 @@ export default function Music() {
     audioRef.current = audio;
 
     function start() {
-      audio.play().catch(() => {}); // ignore if the browser still refuses
+      audio.play().catch(() => {}); 
       window.removeEventListener("pointerdown", start);
       window.removeEventListener("keydown", start);
     }
@@ -34,7 +30,6 @@ export default function Music() {
     };
   }, []);
 
-  // apply the mute button
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = muted;
     setSoundMuted(muted);

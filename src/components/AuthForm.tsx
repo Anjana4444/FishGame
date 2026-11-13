@@ -1,7 +1,6 @@
 "use client";
 
-// Log in / create account form, styled like a paper form on the desk.
-// Written with some help from AI.
+
 
 import { useState } from "react";
 
@@ -42,14 +41,20 @@ export default function AuthForm({ onDone }: { onDone: (user: User) => void }) {
     "font-display text-xl tracking-wide rounded-sm px-5 py-2 disabled:opacity-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-water";
 
   return (
-    <form
+        <form
       onSubmit={(e) => {
         e.preventDefault();
         send("login");
       }}
-      className="max-w-sm rounded-sm bg-paper p-6 text-ink shadow-lg"
+      className="relative max-w-sm rounded-sm bg-paper p-6 text-ink shadow-lg"
     >
-      <p className="mb-4 text-lg">Log in to your desk, or create an account if this is your first shift.</p>
+      <div
+        aria-hidden="true"
+        className="absolute -top-2 left-1/2 h-5 w-16 -translate-x-1/2 rotate-2 bg-stencil/60"
+      />
+
+      <h2 className="mb-1 font-display text-3xl font-extrabold tracking-wide">Log in to your desk</h2>
+      <p className="mb-4 text-ink/70">First shift? Pick a username and password, then press Create account.</p>
 
       <label htmlFor="username" className="mb-1 block">
         Username

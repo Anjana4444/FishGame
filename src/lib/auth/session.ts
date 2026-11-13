@@ -1,13 +1,11 @@
-// Login sessions. The browser only holds a random token in an httpOnly cookie,
-// the server remembers which user the token belongs to.
-// Written with some help from AI.
+
 
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { findUser, type User } from "@/lib/auth/users";
 
 const cookieName = "session";
-const lifetime = 1000 * 60 * 60 * 24 * 7; // one week
+const lifetime = 1000 * 60 * 60 * 24 * 7; 
 
 type Session = { username: string; expires: number };
 
@@ -19,8 +17,8 @@ export async function createSession(username: string) {
   sessions.set(token, { username, expires: Date.now() + lifetime });
 
   (await cookies()).set(cookieName, token, {
-    httpOnly: true, // JavaScript in the page cannot read it
-    sameSite: "lax", // not sent with requests coming from other sites
+    httpOnly: true, 
+    sameSite: "lax", 
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: lifetime / 1000,

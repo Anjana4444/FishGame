@@ -1,12 +1,12 @@
 "use client";
 
-// The wooden crate with the fish tanks inside. Written with some help from AI.
+
 
 import DecoyItem from "@/components/DecoyItem";
 
 type Props = {
   tanks: { image: string; items: string[] }[];
-  number: number; // which crate of the level this is
+  number: number; 
 };
 
 export default function CrateView({ tanks, number }: Props) {

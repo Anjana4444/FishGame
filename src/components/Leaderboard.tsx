@@ -1,6 +1,6 @@
 "use client";
 
-// Table of the best players. Written with some help from AI.
+
 
 import { useEffect, useState } from "react";
 
@@ -12,11 +12,25 @@ type Row = {
   you: boolean;
 };
 
+
+const rankStamp = [
+  "border-[#9a7412] text-[#9a7412]", 
+  "border-[#6b7a80] text-[#6b7a80]", 
+  "border-[#8f5a2c] text-[#8f5a2c]", 
+];
+
+
+const positionTag: Record<string, string> = {
+  Trainee: "border-water text-water",
+  Inspector: "border-approve text-approve",
+  Chief: "border-[#9a7412] text-[#9a7412]",
+};
+
 export default function Leaderboard() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
 
-  // load the table when the panel opens
+ 
   useEffect(() => {
     fetch("/api/leaderboard")
       .then((res) => res.json())
@@ -28,39 +42,67 @@ export default function Leaderboard() {
   }, []);
 
   return (
-    <section aria-label="Leaderboard" className="max-w-xl rounded-sm bg-paper p-5 text-ink shadow-lg">
-      <h2 className="mb-3 font-display text-3xl font-extrabold tracking-wide">Leaderboard</h2>
+    <section aria-label="Leaderboard" className="planks relative max-w-2xl rounded-sm border-4 border-plank-dark p-4 shadow-lg">
+      <div className="relative rounded-sm bg-paper p-6 pt-7 text-ink shadow-md">
+        <div
+          aria-hidden="true"
+          className="absolute -top-2 left-1/2 h-5 w-16 -translate-x-1/2 -rotate-2 bg-stencil/60"
+        />
 
-      {error && (
-        <p role="alert" className="font-bold text-reject">
-          {error}
-        </p>
-      )}
-      {!rows && !error && <p>Loading…</p>}
-      {rows && rows.length === 0 && <p>Nobody has played yet.</p>}
+        <h2 className="font-display text-4xl font-extrabold tracking-wide">Leaderboard</h2>
+        <p className="mb-5 text-ink/70">Best inspectors first: highest position, then most points.</p>
 
-      {rows && rows.length > 0 && (
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b-2 border-ink/30">
-              <th scope="col" className="py-1 pr-3">#</th>
-              <th scope="col" className="py-1 pr-3">Inspector</th>
-              <th scope="col" className="py-1 pr-3">Best position</th>
-              <th scope="col" className="py-1 text-right">Points</th>
-            </tr>
-          </thead>
-          <tbody>
+        {error && (
+          <p role="alert" className="font-bold text-reject">
+            {error}
+          </p>
+        )}
+        {!rows && !error && <p>Loading…</p>}
+        {rows && rows.length === 0 && <p>Nobody is on the board yet. Finish a crate to be the first.</p>}
+
+        {rows && rows.length > 0 && (
+          <ol className="border-l-4 border-reject/40 pl-4">
             {rows.map((row) => (
-              <tr key={row.username} className={row.you ? "bg-stencil/30 font-bold" : ""}>
-                <td className="py-1 pr-3">{row.rank}</td>
-                <td className="py-1 pr-3">{row.username}</td>
-                <td className="py-1 pr-3">{row.position}</td>
-                <td className="py-1 text-right">{row.points}</td>
-              </tr>
+              <li
+                key={row.username}
+                className={`flex items-center gap-3 border-b border-ink/10 py-2 ${
+                  row.you ? "-ml-2 rounded-sm bg-stencil/25 pl-2 pr-2" : ""
+                }`}
+              >
+                <span
+                  className={`flex h-12 w-12 shrink-0 -rotate-6 items-center justify-center rounded-full border-4 font-display text-2xl font-extrabold ${
+                    rankStamp[row.rank - 1] ?? "border-ink/30 text-ink/60"
+                  }`}
+                >
+                  {row.rank}
+                </span>
+
+                <div className="min-w-0">
+                  <p className="truncate font-display text-2xl font-bold leading-tight">
+                    {row.username}
+                    {row.you && <span className="ml-2 text-base font-normal text-ink/70">(you)</span>}
+                  </p>
+                  <span
+                    className={`inline-block -rotate-1 rounded-sm border-2 px-2 font-display text-sm tracking-wide ${
+                      positionTag[row.position] ?? "border-ink/30 text-ink/60"
+                    }`}
+                  >
+                    {row.position}
+                  </span>
+                </div>
+
+                {/* dotted line from the name to the points, like a ledger */}
+                <span aria-hidden="true" className="h-0 flex-1 self-center border-b-2 border-dotted border-ink/30" />
+
+                <p className="shrink-0 font-display text-3xl font-extrabold">
+                  {row.points}
+                  <span className="ml-1 font-body text-sm font-normal text-ink/60">points</span>
+                </p>
+              </li>
             ))}
-          </tbody>
-        </table>
-      )}
+          </ol>
+        )}
+      </div>
     </section>
   );
 }

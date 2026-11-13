@@ -1,8 +1,6 @@
 "use client";
 
-// Controller for the whole game: checks the login, switches between the screens
-// (menu, game, leaderboard, rules) and runs the crate screen.
-// Written with some help from AI.
+
 
 import { useEffect, useState } from "react";
 import AuthForm, { type User } from "@/components/AuthForm";
@@ -16,6 +14,7 @@ import { emit, type GameEvent } from "@/lib/events";
 import { setupSounds } from "@/lib/audio/sounds";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CrateView from "@/components/CrateView";
+import Water from "@/components/Water";
 
 type Crate = {
   id: string;
@@ -39,7 +38,7 @@ type Screen = "menu" | "play" | "board" | "help";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
-// message shown after the crate result, depending on what happened
+
 const eventText: Record<string, string> = {
   "next-level": "Shift complete! You move up to the next level.",
   promoted: "Promotion! You have a new position.",
@@ -48,7 +47,7 @@ const eventText: Record<string, string> = {
   won: "You reached the top. Well done, Chief!",
 };
 
-// which big moment makes which sound
+
 const bigEvents: Record<string, GameEvent> = {
   "next-level": "nextLevel",
   promoted: "promoted",
@@ -57,7 +56,7 @@ const bigEvents: Record<string, GameEvent> = {
   won: "won",
 };
 
-// why the crate was right or wrong, shown after each decision
+
 const explanations: Record<string, string> = {
   honest: "The paperwork was correct. Paper fish never count.",
   miscount: "The paperwork had the wrong number.",
@@ -78,7 +77,7 @@ export default function Game() {
   const [question, setQuestion] = useState<Question | null>(null);
   const [crateNo, setCrateNo] = useState(1);
 
-  // when the page opens, find out who is logged in
+  
   useEffect(() => {
     fetch("/api/auth")
       .then((res) => res.json())
@@ -86,7 +85,7 @@ export default function Game() {
       .catch(() => setUser(null));
   }, []);
 
-  // once we know the player, load their game (if they have one)
+ 
   useEffect(() => {
     if (!user) return;
     fetch("/api/run")
@@ -94,7 +93,7 @@ export default function Game() {
       .then((data) => setRun(data.run ?? null));
   }, [user]);
 
-  // countdown for the current crate
+  
   useEffect(() => {
     if (!crate || result) return;
     const timer = setInterval(() => {
@@ -104,7 +103,7 @@ export default function Game() {
     return () => clearInterval(timer);
   }, [crate, result, deadline]);
 
-  // time is up: send "no answer"
+  
   useEffect(() => {
     if (crate && !result && !busy && timeLeft === 0) {
       decide(null);
@@ -112,10 +111,10 @@ export default function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
 
-  // keyboard shortcuts: A to approve, R to reject
+  
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-            if (!crate || result || busy || question) return;
+      if (!crate || result || busy || question) return;
       if (e.key === "a" || e.key === "A") decide(true);
       if (e.key === "r" || e.key === "R") decide(false);
     }
@@ -124,10 +123,10 @@ export default function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [crate, result, busy, question]);
 
-  // connect the sound effects to the game events
+  
   useEffect(() => setupSounds(), []);
 
-  // tick during the last 10 seconds
+  
   useEffect(() => {
     if (crate && !result && timeLeft > 0 && timeLeft <= 10) emit("lowTime");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,11 +200,11 @@ export default function Game() {
         setResult({ ...data, noAnswer: approve === null });
         setRun(data.run);
 
-        // tell the rest of the game what happened
+        
         if (approve !== null) emit("stamp");
         const outcome: GameEvent = data.correct ? "correct" : approve === null ? "timeUp" : "wrong";
         const big = bigEvents[data.event];
-        // a wrong answer should not play the level-up jingle
+        
         emit(big && (data.correct || big !== "nextLevel") ? big : outcome);
       }
     } catch {
@@ -214,7 +213,7 @@ export default function Game() {
     setBusy(false);
   }
 
-  // ---- moving between the screens ----
+  
 
   function leaveToMenu() {
     setCrate(null);
@@ -224,7 +223,6 @@ export default function Game() {
   }
 
   function goMenu() {
-    // leaving in the middle of a crate: it counts as a mistake when the player comes back
     if (crate && !result) {
       setQuestion({
         title: "Back to the menu?",
@@ -274,14 +272,13 @@ export default function Game() {
     setMessage("");
     setScreen("menu");
   }
-  // ---- what to draw ----
+  
 
   const share = crate ? Math.min(timeLeft / crate.seconds, 1) : 0;
   const lowTime = timeLeft <= 10;
   const promoShare =
     run && run.pointsToPromote > 0 ? Math.min(run.points / run.pointsToPromote, 1) : 0;
 
-  // what to say under the desk when something big happened
   const note = result
     ? eventText[result.event]
     : run && run.status !== "playing"
@@ -301,13 +298,17 @@ export default function Game() {
     return <main className="min-h-screen bg-harbour p-6 text-paper">Checking your login…</main>;
   }
 
-  if (user === null) {
+    if (user === null) {
     return (
       <main className="min-h-screen bg-harbour px-4 py-6 text-paper">
-        <div className="mx-auto max-w-4xl">
+        <Water />
+        <div className="relative z-10 mx-auto max-w-4xl pb-56">
           <h1 className="mb-6 border-b-2 border-stencil pb-3 font-display text-4xl font-extrabold tracking-wide text-stencil">
             Harbour Inspector
           </h1>
+          <p className="mb-8 max-w-xl font-display text-3xl tracking-wide">
+            Count the fish. Check the paperwork. Keep your job.
+          </p>
           <AuthForm onDone={setUser} />
         </div>
       </main>

@@ -1,4 +1,3 @@
-// Types shared by the screens.
 
 export type RunInfo = {
   position: string;
@@ -12,10 +11,9 @@ export type RunInfo = {
   status: "playing" | "choose" | "fired" | "won";
 };
 
-// a question to ask the player before doing something they can't undo
 export type Question = {
   title: string;
   text: string;
-  yes: string; // label of the confirm button
+  yes: string; 
   onYes: () => void;
 };

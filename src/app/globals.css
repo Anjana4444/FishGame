@@ -9,10 +9,10 @@
   --color-stencil: #d2a62c;
   --color-approve: #2e7d57;
   --color-reject: #a63d40;
-    --font-display: var(--font-barlow);
+  --font-display: var(--font-barlow);
   --font-body: var(--font-sourcesans);
-    --color-foam: #7fc8c0;
-      --color-plank: #8b6a42;
+  --color-foam: #7fc8c0;
+  --color-plank: #8b6a42;
   --color-plank-dark: #5a4128;
 }
 
@@ -22,7 +22,6 @@ body {
   font-family: var(--font-body), sans-serif;
 }
 
-/* the stamp lands on the paperwork */
 @keyframes stamp-in {
   0% { transform: scale(1.8) rotate(-12deg); opacity: 0; }
   60% { transform: scale(0.94) rotate(-6deg); opacity: 1; }
@@ -39,7 +38,7 @@ body {
   }
 }
 
-/* menu water scene */
+
 @keyframes drift {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -66,7 +65,7 @@ body {
   .fish-swim { display: none; }
 }
 
-/* wooden crate: plank seams across, faint grain down */
+
 .planks {
   background-color: var(--color-plank);
   background-image:
