@@ -1,10 +1,13 @@
 // Keeps track of one player's progress through the game, on the server.
+// Runs are saved in data/runs.json, so a server restart does not lose them.
 // Written with some help from AI.
 
+import fs from "fs";
+import path from "path";
 import { positions, cratesPerLevel } from "@/lib/game/positions";
 
 export type Run = {
-    username: string;
+  username: string;
   position: number; // index in the positions list
   level: number; // starts at 1
   cratesDone: number; // crates finished in this level
@@ -17,8 +20,32 @@ export type Run = {
 
 export type Event = "continue" | "next-level" | "promoted" | "choose" | "fired" | "won";
 
+const file = path.join(process.cwd(), "data", "runs.json");
+
+// kept in memory after the first read
 const store = globalThis as unknown as { runs?: Map<string, Run> };
-const runs = (store.runs ??= new Map<string, Run>());
+
+function load(): Map<string, Run> {
+  if (store.runs) return store.runs;
+
+  const runs = new Map<string, Run>();
+  try {
+    const saved: Run[] = JSON.parse(fs.readFileSync(file, "utf8"));
+    for (const run of saved) {
+      run.currentCrate = null; // crates are not saved, so an old one can no longer be answered
+      runs.set(run.username, run);
+    }
+  } catch {
+    // no file yet
+  }
+  store.runs = runs;
+  return runs;
+}
+
+function save() {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify([...load().values()], null, 2));
+}
 
 export function startRun(username: string): Run {
   const run: Run = {
@@ -32,14 +59,16 @@ export function startRun(username: string): Run {
     currentCrate: null,
     status: "playing",
   };
-  runs.set(username, run); // a player has one run at a time
+  load().set(username, run); // a player has one run at a time
+  save();
   return run;
 }
 
 export function getRun(username: string | undefined): Run | undefined {
   if (!username) return undefined;
-  return runs.get(username);
+  return load().get(username);
 }
+
 // points for a correct decision: 100 plus a bonus for the time left
 export function pointsFor(secondsLeft: number): number {
   return 100 + secondsLeft;
@@ -59,12 +88,11 @@ function promote(run: Run): Event {
   return "promoted";
 }
 
-// Called after every crate. Updates points, lives and level.
-export function applyResult(run: Run, correct: boolean, secondsLeft: number): Event {
+function play(run: Run, correct: boolean, secondsLeft: number): Event {
   run.currentCrate = null;
 
   if (correct) {
-        const earned = pointsFor(secondsLeft);
+    const earned = pointsFor(secondsLeft);
     run.points += earned;
     run.levelPoints += earned;
   } else {
@@ -94,6 +122,13 @@ export function applyResult(run: Run, correct: boolean, secondsLeft: number): Ev
   return "choose";
 }
 
+// Called after every crate. Updates points, lives and level, then saves.
+export function applyResult(run: Run, correct: boolean, secondsLeft: number): Event {
+  const event = play(run, correct, secondsLeft);
+  save();
+  return event;
+}
+
 // The player's choice when they did not get enough points to be promoted.
 export function choose(run: Run, action: "replay" | "restart"): boolean {
   if (run.status !== "choose") return false;
@@ -109,6 +144,7 @@ export function choose(run: Run, action: "replay" | "restart"): boolean {
   run.cratesDone = 0;
   run.lives = 3;
   run.status = "playing";
+  save();
   return true;
 }
 

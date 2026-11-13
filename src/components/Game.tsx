@@ -15,6 +15,7 @@ import type { RunInfo, Question } from "@/components/types";
 import { emit, type GameEvent } from "@/lib/events";
 import { setupSounds } from "@/lib/audio/sounds";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CrateView from "@/components/CrateView";
 
 type Crate = {
   id: string;
@@ -74,7 +75,8 @@ export default function Game() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-    const [question, setQuestion] = useState<Question | null>(null);
+  const [question, setQuestion] = useState<Question | null>(null);
+  const [crateNo, setCrateNo] = useState(1);
 
   // when the page opens, find out who is logged in
   useEffect(() => {
@@ -144,6 +146,7 @@ export default function Game() {
       } else {
         setCrate(data.crate);
         setRun(data.run);
+        setCrateNo(data.run.cratesDone + 1);
         setResult(null);
         setTimeLeft(data.crate.seconds);
         setDeadline(Date.now() + data.crate.seconds * 1000);
@@ -286,7 +289,7 @@ export default function Game() {
       : undefined;
 
   const stampButton =
-    "font-display text-2xl tracking-wide border-4 rounded-sm px-6 py-2 -rotate-2 transition-transform active:scale-95 disabled:opacity-40 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-water";
+    "font-display text-xl tracking-wide border-4 rounded-sm px-5 py-2 -rotate-2 transition-transform active:scale-95 disabled:opacity-40 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-water";
   const mainButton =
     "font-display text-xl tracking-wide rounded-sm bg-stencil px-6 py-2 text-ink hover:brightness-110 disabled:opacity-50 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-paper";
   const quietButton =
@@ -412,29 +415,14 @@ export default function Game() {
 
             {crate && (
               <div className="grid gap-5 md:grid-cols-[3fr_2fr] md:items-start">
-                <section
-                  aria-label="Fish tanks"
-                  className={crate.tanks.length === 1 ? "grid" : "grid grid-cols-2 items-start gap-3"}
-                >
-                  {crate.tanks.map((tank, i) => (
-                    <figure key={i} className="rounded-md border-4 border-water bg-deep p-1">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={tank.image} alt={`Fish tank ${i + 1}`} className="w-full rounded-sm" />
-                      {tank.items.length > 0 && (
-                        <div className="flex items-end gap-3 px-2 pt-2">
-                          {tank.items.map((item, j) => (
-                            <div key={j} className={`drop-shadow-md ${j % 2 === 0 ? "-rotate-3" : "rotate-3"}`}>
-                              <DecoyItem kind={item} />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <figcaption className="px-1 pt-1 text-sm text-paper/70">Tank {i + 1}</figcaption>
-                    </figure>
-                  ))}
-                </section>
+                <CrateView tanks={crate.tanks} number={crateNo} />
 
-                <section aria-label="Paperwork" className="self-start rounded-sm bg-paper p-5 text-ink shadow-lg">
+                                <section aria-label="Paperwork" className="relative self-start rounded-sm bg-paper p-5 text-ink shadow-lg">
+                  <div
+                    aria-hidden="true"
+                    className="absolute -top-2 left-1/2 h-5 w-16 -translate-x-1/2 rotate-2 bg-stencil/60"
+                  />
+
                   <div className="mb-4 h-2 overflow-hidden rounded-full bg-ink/15">
                     <div
                       className={`h-full ${lowTime && !result ? "bg-reject" : "bg-water"}`}

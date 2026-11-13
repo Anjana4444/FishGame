@@ -11,6 +11,9 @@
   --color-reject: #a63d40;
     --font-display: var(--font-barlow);
   --font-body: var(--font-sourcesans);
+    --color-foam: #7fc8c0;
+      --color-plank: #8b6a42;
+  --color-plank-dark: #5a4128;
 }
 
 body {
@@ -34,4 +37,51 @@ body {
   .stamp-in {
     animation: none;
   }
+}
+
+/* menu water scene */
+@keyframes drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes swim {
+  from { transform: translateX(-12vw); }
+  to { transform: translateX(112vw); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.wave-back { animation: drift 26s linear infinite; }
+.wave-mid { animation: drift 17s linear infinite; }
+.wave-front { animation: drift 11s linear infinite; }
+.fish-swim { animation: swim 40s linear infinite; }
+.fish-bob { animation: bob 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-back, .wave-mid, .wave-front, .fish-bob { animation: none; }
+  .fish-swim { display: none; }
+}
+
+/* wooden crate: plank seams across, faint grain down */
+.planks {
+  background-color: var(--color-plank);
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 46px,
+      rgba(0, 0, 0, 0.35) 46px,
+      rgba(0, 0, 0, 0.35) 48px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.035) 0,
+      rgba(255, 255, 255, 0.035) 2px,
+      rgba(0, 0, 0, 0.05) 2px,
+      rgba(0, 0, 0, 0.05) 9px
+    );
 }
